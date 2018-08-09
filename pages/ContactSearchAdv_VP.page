@@ -1,0 +1,187 @@
+<!-- Page Name: ContactSearchAdv_VP
+Author: Accenture: Amanpreet Sidhu : amanpreet.sidhu@accenture.com
+Date: 13-May-2014
+Requirement/Project Name:   Manage mySales<Contact PublicVPrivate>
+Requirement/Description: Story# 297312 Chapter:5 Contact PublicVPrivate.-->
+
+<apex:page controller="ContactSearchAdv_AC" lightningStylesheets="true">
+    <style type="text/css">
+    .loading-icon {
+       background-image: url(/img/loading.gif);
+       width: 16px;
+       height: 16px;
+    }
+    
+    .search-block {
+       text-align: center;
+    }
+ 
+    .search-block input {
+       margin: 0px 15px 0px 5px;
+    }
+ 
+    .search-block-button {
+       min-width: 110px;
+    }
+ 
+    .process-block {
+       text-align: center;
+       margin-top: 10px;
+    }
+ 
+    .process-block-button {
+       min-width: 110px;
+    }
+
+    .topName {
+        font-size: 22px;
+        font-weight: normal;
+        margin-top:20px;
+        margin-bottom: 23px;
+        vertical-align: text-top;
+        height: 22px;
+        display: block;
+    }
+
+</style>
+
+    <div class = "topName">
+            Client Contact Directory 
+    </div>
+    
+    <div>
+        <p>The Client Contact Directory is a mechanism to search all client contacts across Accenture including those not related to your account(s) and retrieve basic information such Name, Title, and Primary Relationship Owner.</p>  
+        <p>To associate an existing client contact to a different Account, reach out to <a href="mailto:MMS.ClientContacts.Admin@accenture.com" target="_top">MMS.ClientContacts.Admin</a>.</p>
+    </div>
+
+    <apex:form id="TheForm">
+        <apex:pageBlock rendered="{!IF(inputFieldCheck, true, false)}">
+            <div style="color: red; text-align: center;">Please populate at least 2 fields below to perform your Client Contact search</div>
+        </apex:pageBlock>
+         <apex:pageBlock mode="pbSearch">
+         <div style="color: red;">
+         <apex:actionStatus startText=" Processing... " stopText="" id="TableUpdateStatus"/>
+         
+         </div>
+         <div class="search-block">
+            <div style="display:inline">
+               <span>First Name:</span>
+               <apex:inputText value="{!searchFirstName}"/>
+            </div>
+            <div style="display:inline">
+               <span>Last Name:</span>
+               <apex:inputText value="{!searchLastName}"/><br></br>
+            </div>
+            <div>
+            <br></br>
+            </div>
+                <div style="display:inline">
+                <span>Email:</span>
+               <apex:inputText value="{!searchEmail}"/>
+               </div>
+                   <div style="display:inline">
+                 <span>Account:</span>
+               <apex:inputText value="{!searchAccount}"/>
+          </div>
+          </div>
+         <div class="process-block">
+            <apex:actionStatus id="ProcessButtonStatus">
+               <apex:facet name="stop">
+                  <apex:outputPanel >
+                     <apex:commandButton styleClass="search-block-button" value="Search" action="{!runSearch}"    rerender="TheForm,TablePanel"
+               status="TableUpdateStatus" />
+            <apex:commandButton styleClass="process-block-button" value="Clear All" action="{!ClearAll}"  rerender="TheForm,TablePanel" />
+                  </apex:outputPanel>
+               </apex:facet>
+               <apex:facet name="start">
+                  <apex:outputPanel >
+                     <apex:commandButton styleClass="process-block-button" value="Processing..." disabled="true" />
+                     <apex:commandButton styleClass="process-block-button" value="Processing..." disabled="true" />
+                  </apex:outputPanel>
+               </apex:facet>
+            </apex:actionStatus>
+         </div>
+        </apex:pageBlock>
+        <apex:pageBlock id="TablePanel" rendered="{!IF((lstCount.size != null ), true,false)}">
+            <apex:pageBlockTable value="{!contacts}" var="con">
+                <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="AccountId" assignTo="{!SortField}" />
+                           <apex:outputText value="{!$ObjectType.Contact.Fields.AccountId.Label}{!IF(SortField=='AccountId',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputLink value="/{!con.AccountId}" target="_blank">{!con.Account.Name}</apex:outputlink>
+                  </apex:column>
+                  <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="Name" assignTo="{!SortField}" />
+                           <apex:outputText value="{!$ObjectType.Contact.Fields.Name.Label}{!IF(SortField=='Name',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputField value="{!con.Name}" />
+                  </apex:column>
+                  <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="Title" assignTo="{!SortField}" />
+                           <apex:outputText value="{!$ObjectType.Contact.Fields.title.Label}{!IF(SortField=='Title',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputField value="{!con.Title}" />
+                  </apex:column>
+                   <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="Id" assignTo="{!SortField}" />
+                           <apex:outputText value="{!$ObjectType.Contact.Fields.Id.Label}{!IF(SortField=='Id',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputField value="{!con.Id}" />
+                  </apex:column>
+                  <!-- Added by Subra for SI#113 start -->
+                   <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="ReportsToId" assignTo="{!SortField}" />
+                           <apex:outputText value="{!$ObjectType.Contact.Fields.Active_Contact__c.Label}{!IF(SortField=='Active_Contact__c',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputText value="{!con.Active_Contact__c}" />
+                  </apex:column>
+                  <!-- Added by subra for SI#113 End -->
+                  <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="ReportsToId" assignTo="{!SortField}" />
+                           <apex:outputText value="Reports To{!IF(SortField=='ReportsToId',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputText value="{!con.ReportsTo.Name}" />
+                  </apex:column>
+                  <apex:column >
+                     <apex:facet name="header">
+                        <apex:commandLink action="{!toggleSort}" rerender="TablePanel" status="TableUpdateStatus">
+                           <apex:param name="SortField" value="Owner__c" assignTo="{!SortField}" />
+                           <apex:outputText value="{!$ObjectType.Contact.Fields.Owner__c.Label}{!IF(SortField=='Owner__c',IF(sortDir='asc','▲','▼'),'')}" />
+                        </apex:commandLink>
+                     </apex:facet>
+                     <apex:outputLink value="/{!con.Owner__c}" target="_blank">{!con.Owner__r.Name}</apex:outputlink>
+                  </apex:column>
+            </apex:pageBlockTable>
+            <apex:outputPanel >
+            <apex:outputText value="Number of Records per Page: " />
+            <apex:selectList value="{!RecPerPage}" size="1">
+               <apex:selectOptions value="{!RecPerPageOption}" />
+               <apex:actionSupport event="onchange" action="{!buildQuery}" reRender="TablePanel" status="TableUpdateStatus" />
+            </apex:selectList>
+            <apex:commandButton action="{!Beginning}" title="Beginning" value="<<" disabled="{disablePrevious}" reRender="TablePanel" status="TableUpdateStatus"/>
+            <apex:commandButton action="{!Previous}" title="Previous" value="<" disabled="{disablePrevious}" reRender="TablePanel" status="TableUpdateStatus"/>        
+            <apex:commandButton action="{!Next}" title="Next" value=">" disabled="{disableNext}" reRender="TablePanel" status="TableUpdateStatus"/>
+            <apex:commandButton action="{!End}" title="End" value=">>" disabled="{disableNext}" reRender="TablePanel" status="TableUpdateStatus"/>
+            <div style="float: right; margin-top: 5px;">Showing Page # {!pageNumber} of {!totalPages}</div>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

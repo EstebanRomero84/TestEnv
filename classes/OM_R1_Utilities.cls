@@ -1,0 +1,1 @@
+public without sharing class OM_R1_Utilities {}
